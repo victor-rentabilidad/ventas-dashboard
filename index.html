@@ -625,19 +625,22 @@ function aggCanal(rows, rsmen) {
       maxDiaSel = _lr > 0 ? _lr : Math.max.apply(null, rows.map(function(r){return r.dia;}));
     }
     // partSum: días seleccionados (incremental) o acumulado 1..maxDia (vista mensual)
+    // Vista mensual: ppto_act/ppto_contrib_act precalculados por Python
+    // (reflejan el último día real por canal, igual que la tarjeta de fechas).
+    // Filtro de día(s): Part_POS × ppto_mes para el período seleccionado.
     var partSum = 0;
     if (useInc && diasArr.length > 0) {
       diasArr.forEach(function(_d){ partSum += partCanal[mesNum+'_'+_d] || 0; });
-    } else {
-      for (var _d=1; _d<=maxDiaSel; _d++) {
-        partSum += partCanal[mesNum+'_'+_d] || 0;
-      }
     }
-    var paCanal = partSum > 0 ? (b.ppto_mes||0) * partSum : (b.ppto_act||0);
+    var paCanal = (useInc && diasArr.length > 0 && partSum > 0)
+      ? (b.ppto_mes||0) * partSum
+      : (b.ppto_act||0);
     pa  += paCanal;
     vp  += b.vta_proy1   || 0;
     pcm += b.ppto_contrib_mes || 0;
-    var pcaCanal = partSum > 0 ? (b.ppto_contrib_mes||0) * partSum : (b.ppto_contrib_act||0);
+    var pcaCanal = (useInc && diasArr.length > 0 && partSum > 0)
+      ? (b.ppto_contrib_mes||0) * partSum
+      : (b.ppto_contrib_act||0);
     pca += pcaCanal;
     pu  += b.ppto_und  || 0;
     cp  += b.contrib_proy1 || 0;
