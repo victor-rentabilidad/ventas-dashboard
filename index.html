@@ -611,9 +611,19 @@ function aggCanal(rows, rsmen) {
     var canalName = bk.substring(0, bk.lastIndexOf('_'));
     var mesNum = parseInt(bk.substring(bk.lastIndexOf('_')+1));
     partCanal = (partTable[canalName] || {});
-    var maxDiaSel = sDia.size > 0
-      ? Math.max.apply(null, Array.from(sDia).map(Number))
-      : Math.max.apply(null, rows.map(function(r){return r.dia;}));
+    var maxDiaSel;
+    if (sDia.size > 0) {
+      maxDiaSel = Math.max.apply(null, Array.from(sDia).map(Number));
+    } else {
+      // Último día REAL por canal×mes (mismo criterio que buildLag):
+      // el acumulado vta_act debe crecer respecto al día anterior.
+      // Excluye carry-forward → ppto_act = ppto_mes × Σ Part[día 1..últimoDíaReal].
+      var _cRows = rows.filter(function(r){ return r.canal===canalName && r.mes===mesNum; })
+                       .sort(function(a,b){ return a.dia-b.dia; });
+      var _pv=0, _lr=0;
+      _cRows.forEach(function(r){ if(r.vta_act>_pv){_lr=r.dia;} _pv=r.vta_act; });
+      maxDiaSel = _lr > 0 ? _lr : Math.max.apply(null, rows.map(function(r){return r.dia;}));
+    }
     // partSum: días seleccionados (incremental) o acumulado 1..maxDia (vista mensual)
     var partSum = 0;
     if (useInc && diasArr.length > 0) {
