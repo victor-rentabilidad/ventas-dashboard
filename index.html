@@ -734,8 +734,8 @@ function aggCanal(rows, rsmen) {
   // 3. KPIs derivados (calculados desde datos diarios, NO desde TD Pos)
   o.cump_f    = pa > 0 ? o.vta_act/pa*100 : 0;
   o.var_f     = o.vta_ant_f > 0 ? (o.vta_act - o.vta_ant_f)/o.vta_ant_f*100 : 0;
-  o.cump_proy1 = pm > 0 ? vp/pm*100 : 0;           // proy / ppto_mes
-  o.var_proy1  = va > 0 ? (vp-va)/va*100 : 0;
+  o.cump_proy1 = pm > 0 ? o.vta_proy1/pm*100 : 0;  // proy dinámica / ppto_mes (misma ejecución actual)
+  o.var_proy1  = va > 0 ? (o.vta_proy1-va)/va*100 : 0;
   o.var_mg     = o.mg_ant !== 0 ? (o.mg_act-o.mg_ant)/Math.abs(o.mg_ant)*100 : 0;
   o.cump_contrib = pca > 0 ? o.contrib_act/pca*100 : 0;
   o.var_contrib  = o.contrib_ant_f > 0 ? (o.contrib_act-o.contrib_ant_f)/o.contrib_ant_f*100 : 0;
