@@ -698,13 +698,13 @@ function aggCanal(rows, rsmen) {
   // placeholder — se recalcula tras el override
   // Ponderados
   var div = wt || 1;
-  // dscto%: ratio directo sum(dscto$) / (sum(vta) + sum(dscto$))
-  // dscto_act viene de SK_DAILY (net ÷1.19); dscto_ant de Rsmen
-  o.dscto_act_pct = (o.vta_act + o.dscto_act) > 0
-    ? o.dscto_act / (o.vta_act + o.dscto_act) * 100 : 0;
-  // dscto_ant_pct: desde datos diarios 2025 (mismo periodo comparable)
-  o.dscto_ant_pct = (o.vta_ant_f + o.dscto_ant_f) > 0
-    ? o.dscto_ant_f / (o.vta_ant_f + o.dscto_ant_f) * 100 : 0;
+  // dscto%: dscto incluye IVA; vta es neta de IVA → base = vta*1.19 + dscto (venta bruta)
+  // dscto_act viene de SK_DAILY (incluye IVA); vta_act es net ÷1.19
+  o.dscto_act_pct = (o.vta_act * 1.19 + o.dscto_act) > 0
+    ? o.dscto_act / (o.vta_act * 1.19 + o.dscto_act) * 100 : 0;
+  // dscto_ant_pct: misma lógica para 2025
+  o.dscto_ant_pct = (o.vta_ant_f * 1.19 + o.dscto_ant_f) > 0
+    ? o.dscto_ant_f / (o.vta_ant_f * 1.19 + o.dscto_ant_f) * 100 : 0;
   o.var_dscto_pct = o.dscto_ant_pct !== 0
     ? (o.dscto_act_pct - o.dscto_ant_pct) / Math.abs(o.dscto_ant_pct) * 100 : 0;
   // IMU desde datos diarios: (dscto+contrib)/(dscto+vta)
