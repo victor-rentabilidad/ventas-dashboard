@@ -585,8 +585,9 @@ function aggCanal(rows, rsmen) {
       });
     });
     // imu_ant: recalculate from accumulated totals after ant25 additions
-    o.imu_ant = (o.dscto_ant_f + o.vta_ant_f) > 0
-      ? (o.dscto_ant_f + o.contrib_ant_f) / (o.dscto_ant_f + o.vta_ant_f) * 100 : 0;
+    // vta es neta de IVA; dscto y contrib*1.19 incluyen IVA → base bruta = vta*1.19+dscto
+    o.imu_ant = (o.vta_ant_f * 1.19 + o.dscto_ant_f) > 0
+      ? (o.dscto_ant_f + o.contrib_ant_f * 1.19) / (o.vta_ant_f * 1.19 + o.dscto_ant_f) * 100 : 0;
   }
 
   // 2. Obtener campos mensuales de Rsmen (UNA vez por canal+mes)
@@ -707,11 +708,11 @@ function aggCanal(rows, rsmen) {
     ? o.dscto_ant_f / (o.vta_ant_f * 1.19 + o.dscto_ant_f) * 100 : 0;
   o.var_dscto_pct = o.dscto_ant_pct !== 0
     ? (o.dscto_act_pct - o.dscto_ant_pct) / Math.abs(o.dscto_ant_pct) * 100 : 0;
-  // IMU desde datos diarios: (dscto+contrib)/(dscto+vta)
-  o.imu_act = (o.dscto_act + o.vta_act) > 0
-    ? (o.dscto_act + o.contrib_act) / (o.dscto_act + o.vta_act) * 100 : 0;
-  o.imu_ant = (o.dscto_ant_f + o.vta_ant_f) > 0
-    ? (o.dscto_ant_f + o.contrib_ant_f) / (o.dscto_ant_f + o.vta_ant_f) * 100 : 0;
+  // IMU: base bruta = vta*1.19+dscto (vta neta de IVA; dscto y contrib*1.19 incluyen IVA)
+  o.imu_act = (o.vta_act * 1.19 + o.dscto_act) > 0
+    ? (o.dscto_act + o.contrib_act * 1.19) / (o.vta_act * 1.19 + o.dscto_act) * 100 : 0;
+  o.imu_ant = (o.vta_ant_f * 1.19 + o.dscto_ant_f) > 0
+    ? (o.dscto_ant_f + o.contrib_ant_f * 1.19) / (o.vta_ant_f * 1.19 + o.dscto_ant_f) * 100 : 0;
   o.var_imu = o.imu_ant !== 0 ? (o.imu_act - o.imu_ant) / Math.abs(o.imu_ant) * 100 : 0;
 
 
