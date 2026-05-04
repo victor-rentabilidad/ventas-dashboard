@@ -811,6 +811,7 @@ function buildData(src, rsmen) {
       : Math.max.apply(null, f.map(function(r){ return r.dia; }));
     var gr2aug = gr2.slice();
     (CO[gr]||[]).forEach(function(c) {
+      if (sCan.size > 0 && !sCan.has(c)) return; // respetar filtro de canal en subtotales
       var hasRows = gr2.some(function(r){ return r.canal===c; });
       if (!hasRows) {
         var hasBudget = mesArr2.some(function(m){ return rsmen[c+'_'+m]; });
@@ -831,6 +832,7 @@ function buildData(src, rsmen) {
   var faug = f.slice();
   GO.forEach(function(gr) {
     (CO[gr]||[]).forEach(function(c) {
+      if (sCan.size > 0 && !sCan.has(c)) return; // respetar filtro de canal en Total general
       var mesArr3 = [...new Set(f.map(function(r){ return r.mes; }))];
       var maxDiaF3 = sDia.size > 0
         ? Math.max.apply(null, Array.from(sDia).map(Number))
