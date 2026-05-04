@@ -647,7 +647,6 @@ function aggCanal(rows, rsmen) {
           : (b.ppto_act||0))
       : 0;
     pa  += paCanal;
-    vp  += b.vta_proy1   || 0;
     pcm += b.ppto_contrib_mes || 0;
     var pcaCanal = hasActuals
       ? ((useInc && diasArr.length > 0 && partSum > 0)
@@ -656,16 +655,25 @@ function aggCanal(rows, rsmen) {
       : 0;
     pca += pcaCanal;
     pu  += b.ppto_und  || 0;
-    cp  += b.contrib_proy1 || 0;
     mgp_w  += (b.mg_ppto||0) * (b.ppto_act||0); mgp_wt += b.ppto_act||0;
     mga_w  += (b.mg_ant ||0) * w;               mga_wt += w;
     // Campos de referencia ponderados por vta_ant
     dap_w  += (b.dscto_act_pct||0) * w;
     dnp_w  += (b.dscto_ant_pct||0) * w;
     vdp_w  += (b.var_dscto_pct||0) * w;
-    // IMU ponderado por vta_act del registro actual
-    var wImu = 0;
-    deduped.forEach(function(r){ if ((r.canal+'_'+r.mes)===bk) wImu=Math.abs(r.vta_act||0); });
+    // Proyección per-canal: (vta_act_canal / ppto_act_canal) × ppto_mes_canal
+    // Acumular suma de proyecciones individuales — NO recalcular a nivel grupo
+    // (los canales ejecutan independientemente; la tasa grupal distorsiona el total).
+    var wImu = 0, vtaActCanal = 0, contribActCanal = 0;
+    deduped.forEach(function(r){
+      if ((r.canal+'_'+r.mes)===bk) {
+        wImu = Math.abs(r.vta_act||0);
+        vtaActCanal = r.vta_act||0;
+        contribActCanal = r.contrib_act||0;
+      }
+    });
+    vp += paCanal  > 0 ? vtaActCanal     / paCanal  * (b.ppto_mes||0)         : 0;
+    cp += pcaCanal > 0 ? contribActCanal / pcaCanal * (b.ppto_contrib_mes||0) : 0;
     ia_w    += (b.imu_act||0) * wImu;
     ian_w   += (b.imu_ant||0) * wImu;
     vi_w    += (b.var_imu||0) * wImu;
@@ -678,8 +686,9 @@ function aggCanal(rows, rsmen) {
 
   o.vta_ant = va; o.und_ant = ua; o.contrib_ant = ca; o.dscto_ant = da;
   o.ppto_mes = pm; o.ppto_act = pa;
-  // Proyeccion dinamica: (vta_act / ppto_act) * ppto_mes
-  o.vta_proy1 = pa > 0 ? o.vta_act / pa * pm : (vp || 0);
+  // Proyección dinámica: suma de proyecciones per-canal (vta_act_i/ppto_act_i × ppto_mes_i)
+  // El total es la suma — NO se recalcula con tasa grupal (cada canal ejecuta independientemente).
+  o.vta_proy1 = vp || 0;
 
   // Franquicias BOD: proy = (vta_ant_f_BOD / vta_ant_f_POS) × vta_act_POS
   // usando el factor del año anterior respetando el rango filtrado
@@ -704,7 +713,7 @@ function aggCanal(rows, rsmen) {
   // contrib_proy1 dinamico: (contrib_act / ppto_contrib_act) * ppto_contrib_mes
   // Mismo patron que vta_proy1 = (vta_act / ppto_act) * ppto_mes
   // pca ya es dinamico (calculado con Part Pos partSum en el loop de bkeys)
-  o.contrib_proy1 = pca > 0 ? o.contrib_act / pca * pcm : (cp || 0);
+  o.contrib_proy1 = cp || 0;  // suma per-canal, mismo criterio que vta_proy1
   o.mg_ppto = mgp_wt > 0 ? mgp_w/mgp_wt : 0;
   // mg_ant calculado despues del override de contrib_ant_f (ver abajo)
   // placeholder — se recalcula tras el override
