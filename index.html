@@ -318,7 +318,7 @@ const MCFG = {
 const MESES = {1:'Ene',2:'Feb',3:'Mar',4:'Abr',5:'May',6:'Jun',
                7:'Jul',8:'Ago',9:'Sep',10:'Oct',11:'Nov',12:'Dic'};
 const BIZ_CAL={"1":{"b1":31,"b2":31,"gap":0},"2":{"b1":28,"b2":28,"gap":0},"3":{"b1":31,"b2":31,"gap":0},"4":{"b1":30,"b2":30,"gap":0},"5":{"b1":31,"b2":4,"gap":27},"6":{"b1":30,"b2":0,"gap":30},"7":{"b1":31,"b2":0,"gap":31},"8":{"b1":31,"b2":0,"gap":31},"9":{"b1":30,"b2":0,"gap":30},"10":{"b1":31,"b2":0,"gap":31},"11":{"b1":30,"b2":0,"gap":30},"12":{"b1":31,"b2":0,"gap":31}};
-const LAST_UPDATE = "09:15";
+const LAST_UPDATE = "07:37";
 
 function lof(n, v) {
   return n==='Mes' ? (MESES[v]||v) : n==='Dia' ? 'Dia '+v : v;
@@ -1258,37 +1258,4 @@ function init() {
   var diaCorte = getDiaCorte(maxMes);
 
   // Hora Colombia = UTC - 5
-  var nowCO   = new Date(Date.now() - 5*3600000);
-  var todayM  = nowCO.getUTCMonth()+1;   // mes actual Colombia
-  var todayD  = nowCO.getUTCDate();      // dia actual Colombia
-  var biz     = BIZ_CAL[String(todayM)];
-
-  // Regla período de gracia:
-  // gap > 3 (ej: Abril con Semana Santa): mostrar mes anterior SOLO días 1,2,3
-  //   → desde día 4 ya se normalizó la data → mostrar mes actual
-  // gap <= 3 (resto de meses): mostrar mes anterior hasta el 2do día hábil (inclusive)
-  var enPeriodoGracia = (biz.gap > 3 ? (todayD < 4) : (todayD <= biz.b2)) && maxMes < todayM;
-
-  if (enPeriodoGracia) {
-    // Mostrar mes anterior completo — sDia vacío = acumulado final
-    var mesMostrar = todayM > 1 ? todayM - 1 : 12;
-    var hasPrevData = POS.some(function(r){ return r.mes === mesMostrar; });
-    if (hasPrevData) {
-      sMes.add(String(mesMostrar));
-    } else {
-      sMes.add(String(maxMes));
-      for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
-    }
-  } else {
-    sMes.add(String(maxMes));
-    for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
-  }
-  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
-  rf();
-  document.getElementById('fts').textContent = 'Generado: '+new Date().toLocaleString('es-CO');
-}
-init();
-
-</script>
-</body>
-</html>
+  var nowCO   = new Date(Date.n
