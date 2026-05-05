@@ -1258,4 +1258,37 @@ function init() {
   var diaCorte = getDiaCorte(maxMes);
 
   // Hora Colombia = UTC - 5
-  var nowCO   = new Date(Date.n
+  var nowCO   = new Date(Date.now() - 5*3600000);
+  var todayM  = nowCO.getUTCMonth()+1;   // mes actual Colombia
+  var todayD  = nowCO.getUTCDate();      // dia actual Colombia
+  var biz     = BIZ_CAL[String(todayM)];
+
+  // Regla período de gracia:
+  // gap > 3 (ej: Abril con Semana Santa): mostrar mes anterior SOLO días 1,2,3
+  //   → desde día 4 ya se normalizó la data → mostrar mes actual
+  // gap <= 3 (resto de meses): mostrar mes anterior hasta el 2do día hábil (inclusive)
+  var enPeriodoGracia = (biz.gap > 3 ? (todayD < 4) : (todayD <= biz.b2)) && maxMes < todayM;
+
+  if (enPeriodoGracia) {
+    // Mostrar mes anterior completo — sDia vacío = acumulado final
+    var mesMostrar = todayM > 1 ? todayM - 1 : 12;
+    var hasPrevData = POS.some(function(r){ return r.mes === mesMostrar; });
+    if (hasPrevData) {
+      sMes.add(String(mesMostrar));
+    } else {
+      sMes.add(String(maxMes));
+      for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
+    }
+  } else {
+    sMes.add(String(maxMes));
+    for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
+  }
+  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
+  rf();
+  document.getElementById('fts').textContent = 'Generado: '+new Date().toLocaleString('es-CO');
+}
+init();
+
+</script>
+</body>
+</html>
