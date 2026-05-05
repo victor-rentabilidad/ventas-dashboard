@@ -820,7 +820,7 @@ function buildData(src, rsmen) {
     // Proyecciones subtotal = suma de proyecciones de canales individuales del grupo.
     (function(){
       var sp=0, scp=0;
-      res.forEach(function(r){ if(!r._t && r.grupo===gr){ sp+=r.vta_proy1||0; scp+=r.contrib_proy1||0; }});
+      res.forEach(function(r){ if(r._t==='d' && r.grupo===gr){ sp+=r.vta_proy1||0; scp+=r.contrib_proy1||0; }});
       sg.vta_proy1    = sp;
       sg.contrib_proy1= scp;
       sg.cump_proy1         = sg.ppto_mes>0          ? sp/sg.ppto_mes*100          : 0;
@@ -858,7 +858,7 @@ function buildData(src, rsmen) {
   // Proyecciones Total general = suma de proyecciones de canales individuales (excluye subtotales).
   (function(){
     var sp=0, scp=0;
-    res.forEach(function(r){ if(!r._t){ sp+=r.vta_proy1||0; scp+=r.contrib_proy1||0; }});
+    res.forEach(function(r){ if(r._t==='d'){ sp+=r.vta_proy1||0; scp+=r.contrib_proy1||0; }});
     tot.vta_proy1    = sp;
     tot.contrib_proy1= scp;
     tot.cump_proy1         = tot.ppto_mes>0          ? sp/tot.ppto_mes*100          : 0;
