@@ -318,7 +318,7 @@ const MCFG = {
 const MESES = {1:'Ene',2:'Feb',3:'Mar',4:'Abr',5:'May',6:'Jun',
                7:'Jul',8:'Ago',9:'Sep',10:'Oct',11:'Nov',12:'Dic'};
 const BIZ_CAL={"1":{"b1":31,"b2":31,"gap":0},"2":{"b1":28,"b2":28,"gap":0},"3":{"b1":31,"b2":31,"gap":0},"4":{"b1":30,"b2":30,"gap":0},"5":{"b1":31,"b2":10,"gap":21},"6":{"b1":30,"b2":0,"gap":30},"7":{"b1":31,"b2":0,"gap":31},"8":{"b1":31,"b2":0,"gap":31},"9":{"b1":30,"b2":0,"gap":30},"10":{"b1":31,"b2":0,"gap":31},"11":{"b1":30,"b2":0,"gap":30},"12":{"b1":31,"b2":0,"gap":31}};
-const LAST_UPDATE = "10:06";
+const LAST_UPDATE = "07:29";
 
 function lof(n, v) {
   return n==='Mes' ? (MESES[v]||v) : n==='Dia' ? 'Dia '+v : v;
@@ -1238,46 +1238,4 @@ function dl() {
   a.download = '2. Dashboard_Ventas Boss y Bopis.html';
   a.click();
 }
-function init() {
-  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
-  swTab(curTab || 'pos');
-  // Default: determinar mes a mostrar según días hábiles Colombia
-  var allMes = [...new Set(POS.map(function(r){return r.mes;}))];
-  var maxMes  = Math.max.apply(null, allMes);
-  var diaCorte = getDiaCorte(maxMes);
-
-  // Hora Colombia = UTC - 5
-  var nowCO   = new Date(Date.now() - 5*3600000);
-  var todayM  = nowCO.getUTCMonth()+1;   // mes actual Colombia
-  var todayD  = nowCO.getUTCDate();      // dia actual Colombia
-  var biz     = BIZ_CAL[String(todayM)];
-
-  // Regla período de gracia:
-  // gap > 3 (ej: Abril con Semana Santa): mostrar mes anterior SOLO días 1,2,3
-  //   → desde día 4 ya se normalizó la data → mostrar mes actual
-  // gap <= 3 (resto de meses): mostrar mes anterior hasta el 2do día hábil (inclusive)
-  var enPeriodoGracia = (biz.gap > 3 ? (todayD < 4) : (todayD <= biz.b2)) && maxMes < todayM;
-
-  if (enPeriodoGracia) {
-    // Mostrar mes anterior completo — sDia vacío = acumulado final
-    var mesMostrar = todayM > 1 ? todayM - 1 : 12;
-    var hasPrevData = POS.some(function(r){ return r.mes === mesMostrar; });
-    if (hasPrevData) {
-      sMes.add(String(mesMostrar));
-    } else {
-      sMes.add(String(maxMes));
-      for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
-    }
-  } else {
-    sMes.add(String(maxMes));
-    for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
-  }
-  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
-  rf();
-  document.getElementById('fts').textContent = 'Generado: '+new Date().toLocaleString('es-CO');
-}
-init();
-
-</script>
-</body>
-</html>
+function init() {\n  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });\n  swTab(curTab || 'pos');\n  var allMes = [...new Set(POS.map(function(r){return r.mes;}))];\n  var maxMes  = Math.max.apply(null, allMes);\n  var diaCorte = getDiaCorte(maxMes);\n  var nowCO   = new Date(Date.now() - 5*3600000);\n  var todayM  = nowCO.getUTCMonth()+1;\n  var todayD  = nowCO.getUTCDate();\n  var biz     = BIZ_CAL[String(todayM)];\n  var enPeriodoGracia = (biz.gap > 3 ? (todayD < 4) : (todayD <= biz.b2)) && maxMes < todayM;\n  if (enPeriodoGracia) {\n    var mesMostrar = todayM > 1 ? todayM - 1 : 12;\n    var hasPrevData = POS.some(function(r){ return r.mes === mesMostrar; });\n    if (hasPrevData) { sMes.add(String(mesMostrar)); }\n    else { sMes.add(String(maxMes)); for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); } }\n  } else {\n    sMes.add(String(maxMes));\n    for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }\n  }\n  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });\n  rf();\n  document.getElementById('fts').textContent = 'Generado: '+new Date().toLocaleString('es-CO');\n}\ninit();\n\n</script>\n</body>\n</html>
