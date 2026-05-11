@@ -317,8 +317,8 @@ const MCFG = {
 
 const MESES = {1:'Ene',2:'Feb',3:'Mar',4:'Abr',5:'May',6:'Jun',
                7:'Jul',8:'Ago',9:'Sep',10:'Oct',11:'Nov',12:'Dic'};
-const BIZ_CAL={"1":{"b1":31,"b2":31,"gap":0},"2":{"b1":28,"b2":28,"gap":0},"3":{"b1":31,"b2":31,"gap":0},"4":{"b1":30,"b2":30,"gap":0},"5":{"b1":31,"b2":10,"gap":21},"6":{"b1":30,"b2":0,"gap":30},"7":{"b1":31,"b2":0,"gap":31},"8":{"b1":31,"b2":0,"gap":31},"9":{"b1":30,"b2":0,"gap":30},"10":{"b1":31,"b2":0,"gap":31},"11":{"b1":30,"b2":0,"gap":30},"12":{"b1":31,"b2":0,"gap":31}};
-const LAST_UPDATE = "13:12";
+const BIZ_CAL={"1":{"b1":31,"b2":31,"gap":0},"2":{"b1":28,"b2":28,"gap":0},"3":{"b1":31,"b2":31,"gap":0},"4":{"b1":30,"b2":30,"gap":0},"5":{"b1":31,"b2":9,"gap":22},"6":{"b1":30,"b2":0,"gap":30},"7":{"b1":31,"b2":0,"gap":31},"8":{"b1":31,"b2":0,"gap":31},"9":{"b1":30,"b2":0,"gap":30},"10":{"b1":31,"b2":0,"gap":31},"11":{"b1":30,"b2":0,"gap":30},"12":{"b1":31,"b2":0,"gap":31}};
+const LAST_UPDATE = "11:30";
 
 function lof(n, v) {
   return n==='Mes' ? (MESES[v]||v) : n==='Dia' ? 'Dia '+v : v;
@@ -681,12 +681,23 @@ function aggCanal(rows, rsmen) {
   // Proyeccion dinamica: (vta_act / ppto_act) * ppto_mes
   o.vta_proy1 = pa > 0 ? o.vta_act / pa * pm : (vp || 0);
 
-  // Franquicias BOD: proyección viene pre-computada en RBOD por Python
-  // (fórmula: Rsmen_POS col W "Vta Proy % Act" × 0.85)
-  // Usar vp directamente en vez de fórmula dinámica vta_act/ppto_act.
+  // Franquicias BOD: proy = (vta_ant_f_BOD / vta_ant_f_POS) × vta_act_POS
+  // usando el factor del año anterior respetando el rango filtrado
   var isFqBod = (rsmen === RBOD) && deduped.length > 0 && deduped[0].canal === 'Franquicias';
-  if (isFqBod && vp > 0) {
-    o.vta_proy1 = vp;
+  if (isFqBod) {
+    var mes1 = deduped[0].mes;
+    // Find POS vta_ant_f and vta_act at maxDiaSel (closest available dia ≤ maxDiaSel)
+    var fqKey = null;
+    for (var _fd = maxDiaSel; _fd >= 1; _fd--) {
+      if (FQPOS[mes1 + '_' + _fd]) { fqKey = mes1 + '_' + _fd; break; }
+    }
+    if (fqKey) {
+      var _posAnt = FQPOS[fqKey].f;  // vta_ant_f POS at maxDiaSel
+      var _posAct = FQPOS[fqKey].a;  // vta_act POS at maxDiaSel
+      if (_posAnt > 0) {
+        o.vta_proy1 = (o.vta_ant_f / _posAnt) * _posAct;
+      }
+    }
   }
   o.ppto_contrib_mes = pcm; o.ppto_contrib_act = pca;
   o.ppto_und = pu;
@@ -1172,6 +1183,72 @@ function rf() {
   if (tg) document.getElementById('tpos').textContent = 'TD POS \u00b7 Sell-Out \u00b7 '+mm(tg.vta_act)+' MM COP';
 }
 
+function swTab(tab) {
+  curTab = tab;
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    t.classList.toggle('on', (i===0&&tab==='pos')||(i===1&&tab==='bod'));
+  });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+  document.getElementById('panel-'+tab).classList.add('on');
+  kpis(buildData(tab==='pos'?POS:BOD, tab==='pos'?RPOS:RBOD));
+}
+
+// ─── Inicialización ──────────────────────────────────────────────────
+var _rafKpi = null;
+function scaleKpis() {
+  // Usar requestAnimationFrame para evitar ResizeObserver loop
+  if (_rafKpi) return;
+  _rafKpi = requestAnimationFrame(function() {
+    _rafKpi = null;
+    document.querySelectorAll('.kc').forEach(function(card) {
+      var w = card.offsetWidth;
+      var kv = card.querySelector('.kv');
+      var kl = card.querySelector('.kl');
+      var ks = card.querySelector('.ks2');
+      if (!kv) return;
+      var fs = Math.max(10, Math.min(22, Math.round(w * 0.105)));
+      kv.style.fontSize = fs + 'px';
+      if (kl) kl.style.fontSize = Math.max(7, Math.round(w * 0.058)) + 'px';
+      if (ks) ks.style.fontSize = Math.max(7, Math.round(w * 0.065)) + 'px';
+    });
+  });
+}
+var _roKpi=(typeof ResizeObserver!=='undefined')?new ResizeObserver(scaleKpis):{observe:function(){}};
+
+var _rafDig = null;
+function scaleDigCards() {
+  if (_rafDig) return;
+  _rafDig = requestAnimationFrame(function() {
+    _rafDig = null;
+    document.querySelectorAll('.dc:not(.lag)').forEach(function(card) {
+      var w = card.offsetWidth;
+      var dv = card.querySelector('.dv');
+      var dn = card.querySelector('.dn');
+      var ds = card.querySelectorAll('.ds, [style*="font-size:9px"]');
+      if (!dv) return;
+      var fs = Math.max(10, Math.min(20, Math.round(w * 0.105)));
+      dv.style.fontSize = fs + 'px';
+      if (dn) dn.style.fontSize = Math.max(7, Math.round(w * 0.055)) + 'px';
+      ds.forEach(function(el){ el.style.fontSize = Math.max(7, Math.round(w * 0.06)) + 'px'; });
+    });
+    // Lag card: scale title only
+    document.querySelectorAll('.dc.lag').forEach(function(card) {
+      var w = card.offsetWidth;
+      var dn = card.querySelector('.dn');
+      var rows = card.querySelectorAll('.lr');
+      if (dn) dn.style.fontSize = Math.max(8, Math.round(w * 0.07)) + 'px';
+      rows.forEach(function(r){ r.style.fontSize = Math.max(8, Math.round(w * 0.065)) + 'px'; });
+    });
+  });
+}
+var _roDig=(typeof ResizeObserver!=='undefined')?new ResizeObserver(scaleDigCards):{observe:function(){}};
+function dl() {
+  var a = document.createElement('a');
+  var blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
+  a.href = URL.createObjectURL(blob);
+  a.download = '2. Dashboard_Ventas Boss y Bopis.html';
+  a.click();
+}
 function init() {
   ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
   swTab(curTab || 'pos');
