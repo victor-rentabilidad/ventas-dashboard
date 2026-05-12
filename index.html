@@ -681,23 +681,11 @@ function aggCanal(rows, rsmen) {
   // Proyeccion dinamica: (vta_act / ppto_act) * ppto_mes
   o.vta_proy1 = pa > 0 ? o.vta_act / pa * pm : (vp || 0);
 
-  // Franquicias BOD: proy = (vta_ant_f_BOD / vta_ant_f_POS) × vta_act_POS
-  // usando el factor del año anterior respetando el rango filtrado
+  // Franquicias BOD: proyección viene pre-computada en RBOD por Python
+  // (fórmula: Rsmen_POS col W "Vta Proy % Act" × 0.85)
   var isFqBod = (rsmen === RBOD) && deduped.length > 0 && deduped[0].canal === 'Franquicias';
-  if (isFqBod) {
-    var mes1 = deduped[0].mes;
-    // Find POS vta_ant_f and vta_act at maxDiaSel (closest available dia ≤ maxDiaSel)
-    var fqKey = null;
-    for (var _fd = maxDiaSel; _fd >= 1; _fd--) {
-      if (FQPOS[mes1 + '_' + _fd]) { fqKey = mes1 + '_' + _fd; break; }
-    }
-    if (fqKey) {
-      var _posAnt = FQPOS[fqKey].f;  // vta_ant_f POS at maxDiaSel
-      var _posAct = FQPOS[fqKey].a;  // vta_act POS at maxDiaSel
-      if (_posAnt > 0) {
-        o.vta_proy1 = (o.vta_ant_f / _posAnt) * _posAct;
-      }
-    }
+  if (isFqBod && vp > 0) {
+    o.vta_proy1 = vp;
   }
   o.ppto_contrib_mes = pcm; o.ppto_contrib_act = pca;
   o.ppto_und = pu;
