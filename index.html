@@ -1230,6 +1230,35 @@ function scaleDigCards() {
   });
 }
 var _roDig=(typeof ResizeObserver!=='undefined')?new ResizeObserver(scaleDigCards):{observe:function(){}};
+function init() {
+  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
+  swTab(curTab || 'pos');
+  var allMes = [...new Set(POS.map(function(r){return r.mes;}))];
+  var maxMes  = Math.max.apply(null, allMes);
+  var diaCorte = getDiaCorte(maxMes);
+  var nowCO   = new Date(Date.now() - 5*3600000);
+  var todayM  = nowCO.getUTCMonth()+1;
+  var todayD  = nowCO.getUTCDate();
+  var biz     = BIZ_CAL[String(todayM)];
+  var enPeriodoGracia = (biz.gap > 3 ? (todayD < 4) : (todayD <= biz.b2)) && maxMes < todayM;
+  if (enPeriodoGracia) {
+    var mesMostrar = todayM > 1 ? todayM - 1 : 12;
+    var hasPrevData = POS.some(function(r){ return r.mes === mesMostrar; });
+    if (hasPrevData) { sMes.add(String(mesMostrar)); }
+    else { sMes.add(String(maxMes)); for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); } }
+  } else {
+    sMes.add(String(maxMes));
+    for (var d=1; d<=diaCorte; d++) { sDia.add(String(d)); }
+  }
+  ['Mes','Dia','Canal'].forEach(function(n){ ri(n,''); });
+  rf();
+  document.getElementById('fts').textContent = 'Generado: '+new Date().toLocaleString('es-CO');
+}
+init();
+
+</script>
+</body>
+</html>
 function dl() {
   var a = document.createElement('a');
   var blob = new Blob([document.documentElement.outerHTML], {type:'text/html'}new Date().toLocaleString('es-CO');
